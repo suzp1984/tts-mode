@@ -15,6 +15,7 @@
 (require 'ewoc)
 (require 'festival)
 (require 'espeak)
+(require 'cl)
 
 (defgroup tts nil
   "A TTS - text to speech client implemented by 
