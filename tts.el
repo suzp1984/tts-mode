@@ -36,6 +36,11 @@ emacs lisp. It must need a backend engine."
   :type '(repeat (cons string function))
   :group 'tts)
 
+(defcustom tts-buffer "*tts*"
+  "TTS buffer"
+  :type 'string
+  :group 'tts)
+
 (defvar tts-espeak-engine '(("tts-start" . espeak-start)
                      ("tts-stop" . espeak-stop)
                      ("tts-say" . espeak-say))
@@ -158,5 +163,17 @@ emacs lisp. It must need a backend engine."
     (setq tts-mode-point-insert (point-marker)))
   (setq local-abbrev-table tts-mode-abbrev-table))
 
+(defun tts (&optional buffer)
+  "pop to a tts buffer"
+  (interactive)
+  (let* ((buf (if buffer buffer tts-buffer))
+         (tts-n (if (bufferp (get-buffer buf)) 
+                    nil 
+                  t)))
+    (message "%s" buf)
+    (pop-to-buffer buf)
+    (if tts-n
+        (tts-mode))
+    ))
 
 (provide 'tts)
