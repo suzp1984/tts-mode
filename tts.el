@@ -24,9 +24,8 @@ emacs lisp. It must need a backend engine."
   :version "0.1"
   :group 'applications)
 
-(defcustom tts-default-voice nil
-  "Default voice."
-  :group 'tts)
+(defvar tts-default-voice nil
+  "default tts voice")
 
 (defcustom tts-voices-alist '(("festival-english-fair" . tts-voice-festival-english-fair)
                               ("festival-english-male" . tts-voice-festival-english-male)
@@ -109,7 +108,8 @@ emacs lisp. It must need a backend engine."
 (defun tts-voice (voice-name)
   "Interactively set the voice."
   (interactive (list (completing-read "Voice: " tts-voices-alist nil t)))
-  (funcall (cdr (assoc voice-name tts-voices-alist))))
+  (funcall (cdr (assoc voice-name tts-voices-alist)))
+  (setq tts-default-voice voice-name))
 
 (defun tts-ewoc-pp (body)
   "pretty print the body"
@@ -146,7 +146,7 @@ emacs lisp. It must need a backend engine."
   (interactive)
   (when (plusp (- (point-max) tts-mode-point-insert))
     (let ((body (delete-and-extract-region tts-mode-point-insert (point-max))))
-      (ewoc-enter-last tts-mode-ewoc (list :body body :time (current-time))))))
+      (ewoc-enter-last tts-mode-ewoc (list :body body :time (current-time) :voice tts-default-voice)))))
 
 (defvar tts-mode-map
   (let ((map (make-sparse-keymap)))
@@ -168,7 +168,10 @@ emacs lisp. It must need a backend engine."
       (put-text-property (point-min) (point) 'front-sticky t)
       (put-text-property (point-min) (point) 'rear-nonsticky t))
     (setq tts-mode-point-insert (point-marker)))
-  (setq local-abbrev-table tts-mode-abbrev-table))
+  (setq local-abbrev-table tts-mode-abbrev-table)
+  (make-local-variable 'tts-default-voice)
+  (setq tts-default-voice "espeak-en")
+  (tts-voice tts-default-voice))
 
 (defun tts (&optional buffer)
   "pop to a tts buffer"
