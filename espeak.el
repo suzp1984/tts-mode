@@ -12,7 +12,7 @@ more international language. For myself chinese."
   :type '(file :must-match t)
   :group 'espeak)
 
-(defcustom espeak-buffer "*espeak*"
+(defcustom espeak-buffer nil
   "Buffer attached to espeak-process"
   :group 'espeak)
 
@@ -33,7 +33,8 @@ more international language. For myself chinese."
   "Stop espeak process."
   (interactive)
   (when (processp espeak-process)
-    (kill-process espeak-process))
+    (kill-process espeak-process)
+    (sit-for 1))
   (setq espeak-process nil))
 
 (defun espeakp ()

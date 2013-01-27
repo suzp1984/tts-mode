@@ -16,6 +16,7 @@
 (require 'festival)
 (require 'espeak)
 (require 'cl)
+(require 'wid-edit)
 
 (defgroup tts nil
   "A TTS - text to speech client implemented by 
@@ -51,7 +52,6 @@ emacs lisp. It must need a backend engine."
                               ("tts-say" . festival-say))
   "festival tts engine")
 
-;; TODO: how to find lisp store in symbal
 (defvar tts-engine tts-espeak-engine
   "default tts engine, It provide an interface")
 
@@ -90,7 +90,6 @@ emacs lisp. It must need a backend engine."
   (setq tts-engine tts-festival-engine)
   (festival-voice-US-male))
 
-;; TODO espeak voice choice
 (defun tts-voice-espeak-en ()
   "choice espeak english voice"
   (interactive)
@@ -111,20 +110,38 @@ emacs lisp. It must need a backend engine."
   (funcall (cdr (assoc voice-name tts-voices-alist)))
   (setq tts-default-voice voice-name))
 
-(defun tts-ewoc-pp (body)
-  "pretty print the body"
+;; TODO repeat the voice.
+(defun tts-widget-button-notify (widget new event)
+;;  (message "get it! %s" (plist-get (widget-get widget :obj) :body))
+  (let ((text (plist-get (widget-get widget :obj) :body))
+        (voice (plist-get (widget-get widget :obj) :voice))
+        (recover-voice tts-default-voice))
+    (message "TEXT: %s(%s)" text voice)
+    ;;(tts-voice voice)
+    (tts-say text)
+    ;;(tts-voice recover-voice)
+    )
+  )
+
+(defun tts-ewoc-pp (obj)
+  "pretty print the object"
   (let ((beg (point))
-        (text (plist-get body :body))
-        (time (plist-get body :time)))
+        (text (plist-get obj :body))
+        (time (plist-get obj :time)))
     ;;; make a interface here, users can choice differen voice and engine 
     ;;(funcall (cdr (assoc "tts-say" tts-engine)) text)
     (tts-say text)
     (insert (format-time-string tts-mode-time-format time))
     (insert "  ")
-    (insert (propertize text 'face 'tts-mode-default-face))
+    ;;(insert (propertize text 'face 'tts-mode-default-face))
+    (widget-create 'push-button
+                   :notify 'tts-widget-button-notify
+                   :obj obj
+                   text)
     (put-text-property beg (point) 'read-only t)
     (put-text-property beg (point) 'front-sticky t)
-    (put-text-property beg (point) 'rear-nonsticky t)))
+    (put-text-property beg (point) 'rear-nonsticky t))
+  )
 
 (defun tts-say (text)
   "tts say something"
@@ -144,13 +161,16 @@ emacs lisp. It must need a backend engine."
 (defun tts-send-current-line ()
   "Send Current to tts engine"
   (interactive)
-  (when (plusp (- (point-max) tts-mode-point-insert))
+  (if (plusp (- (point-max) tts-mode-point-insert))
     (let ((body (delete-and-extract-region tts-mode-point-insert (point-max))))
-      (ewoc-enter-last tts-mode-ewoc (list :body body :time (current-time) :voice tts-default-voice)))))
+      (ewoc-enter-last tts-mode-ewoc (list :body body :time (current-time) :voice tts-default-voice)))
+    (widget-button-press (point))))
 
 (defvar tts-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map [return] 'tts-send-current-line)
+    (define-key map [down-mouse-1] 'widget-button-click)
+    (define-key map [down-mouse-2] 'widget-button-click)
     map)
   "TTS keymap.")
 
