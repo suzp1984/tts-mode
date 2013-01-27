@@ -66,6 +66,9 @@ emacs lisp. It must need a backend engine."
 (defvar tts-mode-point-insert nil
   "Position where the message being composed starts.")
 
+(defvar tts-mode-time-format "[%H:%M:%S] "
+  "Format of output of time in tts-mode.")
+
 (defface tts-mode-default-face
   '((t (:background "RED" :weight bold)))
   "Default face")
@@ -111,10 +114,13 @@ emacs lisp. It must need a backend engine."
 (defun tts-ewoc-pp (body)
   "pretty print the body"
   (let ((beg (point))
-        (text (plist-get body :body)))
+        (text (plist-get body :body))
+        (time (plist-get body :time)))
     ;;; make a interface here, users can choice differen voice and engine 
     ;;(funcall (cdr (assoc "tts-say" tts-engine)) text)
     (tts-say text)
+    (insert (format-time-string tts-mode-time-format time))
+    (insert "  ")
     (insert (propertize text 'face 'tts-mode-default-face))
     (put-text-property beg (point) 'read-only t)
     (put-text-property beg (point) 'front-sticky t)
