@@ -94,15 +94,19 @@ emacs lisp. It must need a backend engine."
   "choice espeak english voice"
   (interactive)
   (setq tts-engine tts-espeak-engine)
-  (setq espeak-prog-args '("-v" "default"))
-  (tts-stop))
+  (setq espeak-process-name "espeak-en")
+  ;;(setq espeak-prog-args '("-v" "default"))
+  ;;(tts-stop)
+  )
 
 (defun tts-voice-espeak-zh-male ()
   "choice espeak zh Mandarin voice"
   (interactive)
   (setq tts-engine tts-espeak-engine)
-  (setq espeak-prog-args '("-v" "Mandarin"))
-  (tts-stop))
+  ;;(setq espeak-prog-args '("-v" "Mandarin"))
+  (setq espeak-process-name "espeak-zh")
+  ;;(tts-stop)
+  )
 
 (defun tts-voice (voice-name)
   "Interactively set the voice."
@@ -110,16 +114,15 @@ emacs lisp. It must need a backend engine."
   (funcall (cdr (assoc voice-name tts-voices-alist)))
   (setq tts-default-voice voice-name))
 
-;; TODO repeat the voice.
 (defun tts-widget-button-notify (widget new event)
 ;;  (message "get it! %s" (plist-get (widget-get widget :obj) :body))
   (let ((text (plist-get (widget-get widget :obj) :body))
         (voice (plist-get (widget-get widget :obj) :voice))
         (recover-voice tts-default-voice))
     (message "TEXT: %s(%s)" text voice)
-    ;;(tts-voice voice)
+    (tts-voice voice)
     (tts-say text)
-    ;;(tts-voice recover-voice)
+    (tts-voice recover-voice)
     )
   )
 
@@ -166,6 +169,7 @@ emacs lisp. It must need a backend engine."
       (ewoc-enter-last tts-mode-ewoc (list :body body :time (current-time) :voice tts-default-voice)))
     (widget-button-press (point))))
 
+;; TODO bugs here, use use-local-map to rewrite key map
 (defvar tts-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map [return] 'tts-send-current-line)
@@ -191,7 +195,8 @@ emacs lisp. It must need a backend engine."
   (setq local-abbrev-table tts-mode-abbrev-table)
   (make-local-variable 'tts-default-voice)
   (setq tts-default-voice "espeak-en")
-  (tts-voice tts-default-voice))
+  (tts-voice tts-default-voice)
+  )
 
 (defun tts (&optional buffer)
   "pop to a tts buffer"
