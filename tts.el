@@ -62,6 +62,9 @@ emacs lisp. It must need a backend engine."
 (defvar tts-mode-ewoc nil
   "The ewoc object in this buffer")
 
+(defvar tts-ewoc-node nil
+  "Current ewoc node")
+
 (defvar tts-mode-point-insert nil
   "Position where the message being composed starts.")
 
@@ -166,8 +169,34 @@ emacs lisp. It must need a backend engine."
   (interactive)
   (if (plusp (- (point-max) tts-mode-point-insert))
     (let ((body (delete-and-extract-region tts-mode-point-insert (point-max))))
-      (ewoc-enter-last tts-mode-ewoc (list :body body :time (current-time) :voice tts-default-voice)))
+      (setq tts-ewoc-node (ewoc-enter-last 
+                           tts-mode-ewoc 
+                           (list :body body 
+                                 :time (current-time) 
+                                 :voice tts-default-voice))))
     (widget-button-press (point))))
+
+(defun tts-up ()
+  "up line"
+  (interactive)
+  (message "Up line")
+  (delete-region tts-mode-point-insert (point-max))
+  (unless tts-ewoc-node
+    (setq tts-ewoc-node (ewoc-nth tts-mode-ewoc -1)))
+  (if tts-ewoc-node 
+      (insert (plist-get (ewoc-data tts-ewoc-node) :body)))
+  (setq tts-ewoc-node (ewoc-prev tts-mode-ewoc tts-ewoc-node)))
+
+(defun tts-down ()
+  "down line"
+  (interactive)
+  (message "down line")
+  (delete-region tts-mode-point-insert (point-max))
+  (setq tts-ewoc-node (ewoc-next tts-mode-ewoc tts-ewoc-node))
+  (unless tts-ewoc-node
+    (setq tts-ewoc-node (ewoc-nth tts-mode-ewoc 0)))
+  (if tts-ewoc-node
+      (insert (plist-get (ewoc-data tts-ewoc-node) :body))))
 
 ;; TODO bugs here, use use-local-map to rewrite key map
 (defvar tts-mode-map
@@ -175,6 +204,8 @@ emacs lisp. It must need a backend engine."
     (define-key map [return] 'tts-send-current-line)
     (define-key map [down-mouse-1] 'widget-button-click)
     (define-key map [down-mouse-2] 'widget-button-click)
+    (define-key map [C-up] 'tts-up)
+    (define-key map [C-down] 'tts-down)
     map)
   "TTS keymap.")
 
