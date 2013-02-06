@@ -48,15 +48,22 @@ more international language. For myself chinese."
 (defun espeak-stop ()
   "Stop espeak process."
   (interactive)
-  (when (processp espeak-process)
-    (kill-process espeak-process)
-    (sit-for 1))
-  (setq espeak-process nil))
+  (let ((e-process (cdr (assoc espeak-process-name espeak-process-alist))))
+    (when (processp e-process)
+      (when (process-live-p e-process)
+        (kill-process e-process)
+        (sit-for 1))
+      (setq espeak-process-alist 
+            (assq-delete-all espeak-process-name espeak-process-alist))
+      ))
+  )
 
 (defun espeakp ()
   "Return `t' if a espeak process is running, unless nil"
-  (let ((espeakp (processp (cdr (assoc espeak-process-name espeak-process-alist)))))
-    (when (not espeakp)
+  (let ((e-process (cdr (assoc espeak-process-name espeak-process-alist)))
+        (espeakp t))
+    (when (not (and (processp e-process) (process-live-p e-process)))
+      (espeak-stop)
       (espeak-start)
       (setq espeakp t))
     espeakp))

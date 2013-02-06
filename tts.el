@@ -164,17 +164,49 @@ emacs lisp. It must need a backend engine."
   (interactive)
   (funcall (cdr (assoc "tts-stop" tts-engine))))
 
+(defun tts-quit ()
+  "Quit tts mode"
+  (interactive)
+  (if (buffer-live-p (get-buffer tts-buffer))
+      (kill-buffer tts-buffer)))
+
+(defun tts-send-to-engine (text)
+  (interactive "sText: ")
+  (unless (buffer-live-p (get-buffer tts-buffer))
+    (tts))
+  (with-current-buffer tts-buffer
+   (if text 
+      (setq tts-ewoc-node (ewoc-enter-last
+                       tts-mode-ewoc
+                       (list :body text
+                             :time (current-time)
+                             :voice tts-default-voice))))))
+
 (defun tts-send-current-line ()
   "Send Current to tts engine"
   (interactive)
   (if (plusp (- (point-max) tts-mode-point-insert))
     (let ((body (delete-and-extract-region tts-mode-point-insert (point-max))))
-      (setq tts-ewoc-node (ewoc-enter-last 
-                           tts-mode-ewoc 
-                           (list :body body 
-                                 :time (current-time) 
-                                 :voice tts-default-voice))))
-    (widget-button-press (point))))
+      (tts-send-to-engine body))
+    ;; TODO: maybe bugs
+    ;;(widget-button-press (point))
+    ))
+
+(defun tts-say-word-at-point (&optional record)
+  "Send the word at point to tts engine"
+  (interactive "P")
+  (let ((word (thing-at-point 'word)))
+    (if record 
+        (tts-send-to-engine word)
+      (tts-say word))))
+
+(defun tts-say-sentence-at-point (&optional record)
+  "Send the sentence to tts engine"
+  (interactive "P")
+  (let ((sentence (thing-at-point 'sentence)))
+    (if record 
+        (tts-send-to-engine sentence)
+      (tts-say sentence))))
 
 (defun tts-up ()
   "up line"
@@ -224,7 +256,7 @@ emacs lisp. It must need a backend engine."
       (put-text-property (point-min) (point) 'rear-nonsticky t))
     (setq tts-mode-point-insert (point-marker)))
   (setq local-abbrev-table tts-mode-abbrev-table)
-  (make-local-variable 'tts-default-voice)
+  ;;(make-local-variable 'tts-default-voice)
   (setq tts-default-voice "espeak-en")
   (tts-voice tts-default-voice)
   )
