@@ -80,8 +80,9 @@
   "Say text via say process"
   (interactive "sText: ")
   (when (sayp)
-    (message "say: %s" text)
-    (process-send-string say-process text)))
+    ;;(process-send-string say-process text)
+    (start-process say-process-name say-buffer 
+                   say-program text)))
 
 (provide 'macsay)
 ;;; macsay.el ends here

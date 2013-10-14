@@ -15,6 +15,7 @@
 (require 'ewoc)
 (require 'festival)
 (require 'espeak)
+(require 'macsay)
 (require 'cl)
 (require 'wid-edit)
 
@@ -32,7 +33,8 @@ emacs lisp. It must need a backend engine."
                               ("festival-english-male" . tts-voice-festival-english-male)
                               ("festival-english-us-male" . tts-voice-festival-english-us-male)
                               ("espeak-en" . tts-voice-espeak-en)
-                              ("espeak-zh" . tts-voice-espeak-zh-male))
+                              ("espeak-zh" . tts-voice-espeak-zh-male)
+                              ("macsay" . tts-voice-macsay))
   "alist of voice"
   :type '(repeat (cons string function))
   :group 'tts)
@@ -51,6 +53,11 @@ emacs lisp. It must need a backend engine."
                               ("tts-stop" . festival-stop)
                               ("tts-say" . festival-say))
   "festival tts engine")
+
+(defvar tts-macsay-engine '(("tts-start" . say-start)
+                            ("tts-stop" . say-stop)
+                            ("tts-say" . say-say))
+  "Mac OS say engine")
 
 (defvar tts-engine tts-espeak-engine
   "default tts engine, It provide an interface")
@@ -107,6 +114,12 @@ emacs lisp. It must need a backend engine."
   (setq espeak-process-name "espeak-zh")
   ;;(tts-stop)
   )
+
+(defun tts-voice-macsay ()
+  "chioce mac os's say engine"
+  (interactive)
+  (setq tts-engine tts-macsay-engine)
+)
 
 (defun tts-voice (voice-name)
   "Interactively set the voice."
