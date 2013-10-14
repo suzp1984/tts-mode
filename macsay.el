@@ -35,5 +35,53 @@
   :type '(file :must-match t)
   :group 'say)
 
+(defcustom say-buffer nil
+  "Buffer attached to say-process"
+  :group 'say) 
+
+(defvar say-process nil
+  "Process handle for say program")
+
+(defvar say-process-alist nil
+  "alist collect of processes.")
+
+(defvar say-process-name "say")
+
+
+(defun say-start ()
+  "start say process"
+  (interactive)
+  (let ((process (get-process say-process-name))
+        (args))
+    (unless (processp process)
+      (setq process (eval `(start-process say-process-name
+                                          say-buffer say-program ,@args)))
+      (setq say-process process))
+    )
+  )
+
+(defun say-stop ()
+  "Stop say process"
+  (interactive)
+  (when (processp say-process)
+    (kill-process say-process)
+    (sit-for 1))
+  (setq say-process nil))
+
+(defun sayp ()
+  "return `t' if a say process is running, unless nil"
+  (let ((sayp (processp say-process)))
+    (when (not sayp)
+      (say-start)
+      (setq sayp t))
+    sayp))
+
+(defun say-say (text)
+  "Say text via say process"
+  (interactive "sText: ")
+  (when (sayp)
+    (message "say: %s" text)
+    (process-send-string say-process text)))
+
 (provide 'macsay)
 ;;; macsay.el ends here
